@@ -1099,7 +1099,7 @@ def auth_login():
         user = User.get_by_username(post_data.get('username'))
         if user and user.password == post_data.get('password') and user.is_email_verified:
             auth_token = user.encode_auth_token(user.user_id)
-	    user_dict = user.json()
+            user_dict = user.json()
             if auth_token:
                 responseObject = {
                     'status': 'success',
@@ -1109,7 +1109,7 @@ def auth_login():
                 }
                 return make_response(jsonify(responseObject)), 201
 		
-	elif user and user.password == post_data.get('password') and user.is_email_verified != 'true':
+        elif user and user.password == post_data.get('password') and user.is_email_verified != 'true':
             responseObject = {
                 'status' : 'fail',
                 'message' : 'Email Not Verified'

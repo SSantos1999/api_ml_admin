@@ -8,6 +8,7 @@
 	<script src="{{ url_for('static', filename='js/jquery.easypiechart.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/Chart.min.js') }}"></script>
 	<script src="https://cdn.jsdelivr.net/gh/emn178/chartjs-plugin-labels/src/chartjs-plugin-labels.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
@@ -20,29 +21,36 @@
 			<div
 				style="position:absolute;left:110px;width:100% right:10px; top:80px;border: 1px solid green;border-radius: 25px">
 				<h1 class="heading">Health Score:</h1><br>
-				
+
 			</div>
 			<button id="refresh" onclick="Refresh()"> zoom out</button>
 			<div class="barChartDiv">
+				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px" id="StepHelp"></i>
 				<canvas id="StepChart1" width='500' height='300'></canvas>
 			</div>
 
-			<div
-				style="padding-left:315px;">
-				<a href="#" class="previous round">&#8249;</a>
-				<a href="#" class="next round">&#8250;</a>
-			</div>
-			<div class="lineChartDiv">
-				<canvas id="HeartChart2" width='500' height='300'></canvas>
-			</div>
 
 			<div class="lineChartDiv">
+				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px;"
+					id="HeartHelp"></i>
+				<canvas id="HeartChart2" width='500' height='300'></canvas>
+
+			</div>
+
+
+			<div class="lineChartDiv">
+				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px"
+					id="CaloriesHelp"></i>
 				<canvas id="CaloriesChart" width='500' height='300'></canvas>
 			</div>
 			<div class="lineChartDiv">
+				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px"
+					id="DistanceHelp"></i>
 				<canvas id="DistanceChart" width='500' height='300'></canvas>
 			</div>
 			<div class="lineChartDiv">
+				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px"
+					id="FloorsHelp"></i>
 				<canvas id="FloorsChart" width='500' height='300'></canvas>
 			</div>
 			<div class="lineChartDiv">
@@ -87,24 +95,69 @@
 
 
 	</div>
-<script>
-//this function finds the current day to display as a default value for the calender
-function GetDateTime() {
-
-var today = new Date();
-var dd = String(today.getDate()).padStart(2, '0');
-var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-var yyyy = today.getFullYear();
-
-today = yyyy + '-' + mm + '-' + dd;
-document.getElementById('start').value = today;
-
-}
-</script>
 
 	<script>
 
-		let labelsactivity = ['Sedentary', 'Lightly Active', "Very Active","Fairly Active"];
+
+		//event listeners for the help icons
+		StepMessage="It is recommended to get atleast 2000 steps every day.";
+		HeartMessage="Resting Heart Rate\nGood: 60-100 bpm\n Could Improve: Less than 60 bpm or greater than 100 bpm";
+		CaloriesMessage="This chart displays the calories burned\n within the given timeframe."
+		DistanceMessage="This chart displays the distance traveled \n within the given timeframe."
+		FloorsMessage="This chart displays the total floors gone up\n within the given timeframe."
+
+		$("#StepHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#StepHelp',StepMessage)); },
+			hideTooltip);
+
+		$("#HeartHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#HeartHelp',HeartMessage)); },
+			hideTooltip);
+		$("#CaloriesHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#CaloriesHelp',CaloriesMessage)); },
+			hideTooltip);
+		$("#DistanceHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#DistanceHelp',DistanceMessage)); },
+			hideTooltip);
+		$("#FloorsHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#FloorsHelp',FloorsMessage)); },
+			hideTooltip);
+
+
+		function showTooltip(id,message) {
+			console.log(message);
+			var htmlelement = "<header h6 id='helpinfo' class='tooltip' style=' border: 1px solid red'>";
+			htmlelement = htmlelement + message;
+			htmlelement = htmlelement + "</header>";
+			var tip = $(htmlelement);
+			tip.appendTo($(id));
+		}
+
+		function hideTooltip() {
+			clearTimeout(tooltipTimeout);
+			$("#helpinfo").fadeOut().remove();
+		}
+
+
+
+
+
+
+
+	</script>
+	<script>
+		//this function finds the current day to display as a default value for the calender
+		function GetDateTime() {
+
+			var today = new Date();
+			var dd = String(today.getDate()).padStart(2, '0');
+			var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+			var yyyy = today.getFullYear();
+
+			today = yyyy + '-' + mm + '-' + dd;
+			document.getElementById('start').value = today;
+
+		}
+	</script>
+
+	<script>
+
+		let labelsactivity = ['Sedentary', 'Lightly Active', "Very Active", "Fairly Active"];
 		let activitychart = document.getElementById("ActivityChart").getContext('2d');
 
 		let activitychart1 = new Chart(activitychart, {
@@ -112,24 +165,24 @@ document.getElementById('start').value = today;
 
 			data: {
 				datasets: [{
-					data: [{{ todayData[5] }},{{ todayData[6] }},{{ todayData[7] }}, {{ todayData[8] }} ],
-					backgroundColor: ["rgba(0,0,255,0.5)", "rgba(0,255,0,0.5)", "rgba(255,0,0,0.5)"]
+					data: [{{ todayData[5] }}, {{ todayData[6] }},{{ todayData[7] }}, { { todayData[8] } } ],
+		backgroundColor: ["rgba(0,0,255,0.5)", "rgba(0,255,0,0.5)", "rgba(255,0,0,0.5)"]
 				}],
-				labels: ['Sedentary', 'LightlyActive', 'VeryActive','Fairly Active']
+		labels: ['Sedentary', 'LightlyActive', 'VeryActive', 'Fairly Active']
 			},
 
-			options: {
-				title: {
-					text: "Activity Breakdown",
+		options: {
+			title: {
+				text: "Activity Breakdown",
 					display: true
-				},
-				hover: {
-					mode: 'nearest',
+			},
+			hover: {
+				mode: 'nearest',
 					intersect: true
-				},
-				centertext: "0"
+			},
+			centertext: "0"
 
-			}
+		}
 
 		});
 		Chart.pluginService.register({
@@ -163,7 +216,7 @@ document.getElementById('start').value = today;
 
 		let sleepchart = document.getElementById("SleepChart").getContext('2d');
 		let Awake = {{ Sleep[0] }};
-		let Light ={{ Sleep[1] }};
+		let Light = {{ Sleep[1] }};
 		let Deep = {{ Sleep[2] }}
 		let Rem = {{ Sleep[3] }};
 		console.log(Awake);
@@ -317,22 +370,19 @@ document.getElementById('start').value = today;
 		let colors2 = [];
 
 		for (let heartrate in data2) {
-		  if(data2[heartrate]>100)
-		 {
-		 	colors2.push('rgba(255, 0, 0, 1)');
-		  }
-		  else if(data2[heartrate]<60)
-		 {
-		 	colors2.push('rgba(0, 85, 0,1)');
+			if (data2[heartrate] > 100) {
+				colors2.push('rgba(255, 0, 0, 1)');
+			}
+			else if (data2[heartrate] < 60) {
+				colors2.push('rgba(0, 85, 0,1)');
 
-		  }
-		  else if(data2[heartrate]>=60 || data2[heartrate]<=100)
-		  {
-			colors2.push('rgba(255, 0, 0,1)');
-		  }
+			}
+			else if (data2[heartrate] >= 60 || data2[heartrate] <= 100) {
+				colors2.push('rgba(255, 0, 0,1)');
+			}
 
 		}
-		
+
 
 		let myChart2 = document.getElementById("HeartChart2").getContext('2d');
 
@@ -599,7 +649,7 @@ document.getElementById('start').value = today;
 		function Refresh() {
 			var StartDate = $('#start').val().split('/');
 			var EndDate = $('#end').val().split('/');
-			
+
 
 			$.ajax({
 				url: "/web/weekdata",
@@ -689,7 +739,7 @@ document.getElementById('start').value = today;
 
 
 		}
-		
+
 		function GetData() {
 			var StartDate = $('#start').val().split('/');
 			var EndDate = $('#end').val().split('/');
@@ -697,10 +747,10 @@ document.getElementById('start').value = today;
 				url: "/web/datedata",
 				type: "POST",
 				data: {
-					'Start' : StartDate,
-					'End' : EndDate
+					'Start': StartDate,
+					'End': EndDate
 				},
-				success: function (res){
+				success: function (res) {
 					console.log(res);
 					WeeklyFitbitSummary = res.Summary
 					WeeklySleepData = res.SleepData
@@ -713,13 +763,13 @@ document.getElementById('start').value = today;
 					Elevation = []
 					Sleep = [0, 0, 0, 0]
 					SleepHours = [0, 0]
-					ActivityHours=[0,0,0,0]
-					colorsHeartRate=[]
-					colorsSteps=[]
-					colorsDistance=[]
-					colorsFloors=[]
-					colorsElevation=[]
-					colorsCalories=[]
+					ActivityHours = [0, 0, 0, 0]
+					colorsHeartRate = []
+					colorsSteps = []
+					colorsDistance = []
+					colorsFloors = []
+					colorsElevation = []
+					colorsCalories = []
 					var i;
 					//go through our weekly array
 					for (i = 0; i < WeeklyDaily.length; i++) {
@@ -731,72 +781,58 @@ document.getElementById('start').value = today;
 						HeartRate.push(WeeklyDaily[i][9]);
 						console.log(WeeklyDaily[i][9]);
 						//check the heartrate and determine the color to push to the graph's colors array
-						if(parseFloat(WeeklyDaily[i][9])<60 || parseFloat(WeeklyDaily[i][9]>100))
-						{
+						if (parseFloat(WeeklyDaily[i][9]) < 60 || parseFloat(WeeklyDaily[i][9] > 100)) {
 							colorsHeartRate.push('rgba(255, 0, 0, 1)');
 						}
-						else
-						{
+						else {
 							colorsHeartRate.push('rgba(0, 255, 0, 1)');
 						}
-						
-						if(parseFloat(WeeklyDaily[i][1])>0)
-						{
+
+						if (parseFloat(WeeklyDaily[i][1]) > 0) {
 							colorsSteps.push('rgba(0, 255, 0, 1)');
 
 						}
-						else
-						{
+						else {
 							colorsSteps.push('rgba(255, 0, 0, 1)');
 						}
-						if(parseFloat(WeeklyDaily[i][0])>0)
-						{
+						if (parseFloat(WeeklyDaily[i][0]) > 0) {
 							colorsCalories.push('rgba(0, 255, 0, 1)');
 
 						}
-						else
-						{
+						else {
 							colorsCalories.push('rgba(255, 0, 0, 1)');
 						}
 
-						if(parseFloat(WeeklyDaily[i][2])>0)
-						{
+						if (parseFloat(WeeklyDaily[i][2]) > 0) {
 							colorsDistance.push('rgba(0, 255, 0, 1)');
 
 						}
-						else
-						{
+						else {
 							colorsDistance.push('rgba(255, 0, 0, 1)');
 						}
-						if(parseFloat(WeeklyDaily[i][3])>0)
-						{
+						if (parseFloat(WeeklyDaily[i][3]) > 0) {
 							colorsFloors.push('rgba(0, 255, 0, 1)');
 
 						}
-						else
-						{
+						else {
 							colorsFloors.push('rgba(255, 0, 0, 1)');
 						}
-						if(parseFloat(WeeklyDaily[i][4])>0)
-						{
+						if (parseFloat(WeeklyDaily[i][4]) > 0) {
 							colorsElevation.push('rgba(0, 255, 0, 1)');
 
 						}
-						else
-						{
+						else {
 							colorsElevation.push('rgba(255, 0, 0, 1)');
 						}
 						//check if 
-						if(WeeklyDaily[i][5]==undefined)
-						{
+						if (WeeklyDaily[i][5] == undefined) {
 							continue;
 						}
-						else
-						{
-							ActivityHours[0]=ActivityHours[0]+parseInt(WeeklyDaily[i][5]);
-							ActivityHours[1]=ActivityHours[1]+parseInt(WeeklyDaily[i][6]);
-							ActivityHours[2]=ActivityHours[2]+parseInt(WeeklyDaily[i][7]);
-							ActivityHours[3]=ActivityHours[3]+parseInt(WeeklyDaily[i][8]);
+						else {
+							ActivityHours[0] = ActivityHours[0] + parseInt(WeeklyDaily[i][5]);
+							ActivityHours[1] = ActivityHours[1] + parseInt(WeeklyDaily[i][6]);
+							ActivityHours[2] = ActivityHours[2] + parseInt(WeeklyDaily[i][7]);
+							ActivityHours[3] = ActivityHours[3] + parseInt(WeeklyDaily[i][8]);
 						}
 					}
 					console.log(ActivityHours)
@@ -811,8 +847,7 @@ document.getElementById('start').value = today;
 
 					for (i = 0; i < WeeklyFitbitSummary.length; i++) {
 						//check if the sleep field is empty in the response
-						if(WeeklyFitbitSummary[i][6] === undefined)
-						{
+						if (WeeklyFitbitSummary[i][6] === undefined) {
 							continue;
 
 						}
@@ -823,7 +858,7 @@ document.getElementById('start').value = today;
 
 					}
 
-					SleepHours[1] = 63-parseFloat(SleepHours[0]);
+					SleepHours[1] = 63 - parseFloat(SleepHours[0]);
 
 
 					Sleep[0] = Sleep[0].toFixed(2)
@@ -836,55 +871,56 @@ document.getElementById('start').value = today;
 					//var HoursSlept=res.hours_slept;
 					//var HeartRate= res.heart_rate;
 					chart1.data.datasets[0].data = Steps;
-					chart1.data.datasets[0].backgroundColor=colorsSteps;
-					chart1.data.datasets[0].borderColor=colorsSteps;
-					chart1.data.datasets[0].pointBorderColor=colorsSteps;
-					chart1.data.datasets[0].backgroundColor=colorsSteps;
-					chart1.data.datasets[0].pointBackgroundColor=colorsSteps;
+					chart1.data.datasets[0].backgroundColor = colorsSteps;
+					chart1.data.datasets[0].borderColor = colorsSteps;
+					chart1.data.datasets[0].pointBorderColor = colorsSteps;
+					chart1.data.datasets[0].backgroundColor = colorsSteps;
+					chart1.data.datasets[0].pointBackgroundColor = colorsSteps;
 
 
 					chart2.data.datasets[0].data = HeartRate;
 
 					//adjust the Heart rate chart's colors
-					chart2.data.datasets[0].backgroundColor=colorsHeartRate;
-					chart2.data.datasets[0].borderColor=colorsHeartRate;
-					chart2.data.datasets[0].pointBorderColor=colorsHeartRate;
-					chart2.data.datasets[0].backgroundColor=colorsHeartRate;
-					chart2.data.datasets[0].pointBackgroundColor=colorsHeartRate;
+					chart2.data.datasets[0].backgroundColor = colorsHeartRate;
+					chart2.data.datasets[0].borderColor = colorsHeartRate;
+					chart2.data.datasets[0].pointBorderColor = colorsHeartRate;
+					chart2.data.datasets[0].backgroundColor = colorsHeartRate;
+					chart2.data.datasets[0].pointBackgroundColor = colorsHeartRate;
 
-
+					//adjust the calories chart with the updated data
 					chart3.data.datasets[0].data = Calories;
-					chart3.data.datasets[0].backgroundColor=colorsCalories;
-					chart3.data.datasets[0].borderColor=colorsCalories;
-					chart3.data.datasets[0].pointBorderColor=colorsCalories;
-					chart3.data.datasets[0].backgroundColor=colorsCalories;
-					chart3.data.datasets[0].pointBackgroundColor=colorsCalories;
-
+					chart3.data.datasets[0].backgroundColor = colorsCalories;
+					chart3.data.datasets[0].borderColor = colorsCalories;
+					chart3.data.datasets[0].pointBorderColor = colorsCalories;
+					chart3.data.datasets[0].backgroundColor = colorsCalories;
+					chart3.data.datasets[0].pointBackgroundColor = colorsCalories;
+					//update the distance chart with the updated data
 					chart4.data.datasets[0].data = Distance;
-					chart4.data.datasets[0].backgroundColor=colorsDistance;
-					chart4.data.datasets[0].borderColor=colorsDistance;
-					chart4.data.datasets[0].pointBorderColor=colorsDistance;
-					chart4.data.datasets[0].backgroundColor=colorsDistance;
-					chart4.data.datasets[0].pointBackgroundColor=colorsDistance;
+					chart4.data.datasets[0].backgroundColor = colorsDistance;
+					chart4.data.datasets[0].borderColor = colorsDistance;
+					chart4.data.datasets[0].pointBorderColor = colorsDistance;
+					chart4.data.datasets[0].backgroundColor = colorsDistance;
+					chart4.data.datasets[0].pointBackgroundColor = colorsDistance;
 
-
+					//update the floors chart with the updated data
 					chart5.data.datasets[0].data = Floors;
-					chart5.data.datasets[0].backgroundColor=colorsFloors;
-					chart5.data.datasets[0].borderColor=colorsFloors;
-					chart5.data.datasets[0].pointBorderColor=colorsFloors;
-					chart5.data.datasets[0].backgroundColor=colorsFloors;
-					chart5.data.datasets[0].pointBackgroundColor=colorsFloors;					
-
+					chart5.data.datasets[0].backgroundColor = colorsFloors;
+					chart5.data.datasets[0].borderColor = colorsFloors;
+					chart5.data.datasets[0].pointBorderColor = colorsFloors;
+					chart5.data.datasets[0].backgroundColor = colorsFloors;
+					chart5.data.datasets[0].pointBackgroundColor = colorsFloors;
+					//update the sleepchart
 					sleepchart1.data.datasets[0].data = Sleep;
 					sleeptimechart1.data.datasets[0].data = SleepHours;
-					activitychart1.data.datasets[0].data=ActivityHours;
+					activitychart1.data.datasets[0].data = ActivityHours;
 
 					chart1.data.labels = res.Dates;
 					chart2.data.labels = res.Dates;
 					chart3.data.labels = res.Dates;
 					chart4.data.labels = res.Dates;
 					chart5.data.labels = res.Dates;
-					//console.log(res)
+
+					//tell the charts to update with the new information, or "refresh" with the new data
 					chart1.update();
 					chart2.update();
 					chart3.update();
