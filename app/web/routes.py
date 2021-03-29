@@ -47,7 +47,7 @@ def retrieveFitbitSummary(date):
         obj = s3.Bucket('mobilebucket').Object(queryString).get()
     except:
 
-        Summary = [[0], [0], [0], [0], [0], [0]]
+        Summary = [[0], [0], [0], [0], [0], [0], [0],[0],[0]]
         return Summary
 
     obj = s3.Bucket('mobilebucket').Object(queryString).get()
@@ -62,9 +62,12 @@ def retrieveFitbitSummary(date):
         OutofRange = ['(Out of Range)']
         caloriesOut = row['caloriesOut']
         SleepData = row['totalMinutesAsleep']
+        trackerDistance= row['trackerdistance']
+        efficiency=row['efficiency']
+        activityDistance=row['loggedActivitiesdistance']
 
     Summary = [idd, activeScore, efficiency,
-               restingHeartRate, OutOfRange, caloriesOut, SleepData]
+               restingHeartRate, OutOfRange, caloriesOut, SleepData, trackerDistance, activityDistance]
     return Summary
 
 
@@ -474,6 +477,7 @@ def mydashboard():
 
         DateString = today.strftime("%Y-%m-%d")
         DateString = str(DateString)
+        DateString = "2021-03-04"
         print(DateString)
         Summary = retrieveFitbitSummary(DateString)
         # Sleep data array consisting of [Awake,Light,Deep,Rem] sleep

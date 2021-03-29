@@ -69,8 +69,29 @@
 
 			<input type="date" id="end">
 			<button id="refresh" onclick="GetData()">Get Info</button>
-
-
+			<br><br><br><br><br><br><br><br><br><br>
+			<table style="width:50%;border: 1px solid black;">
+				<tr style="border: 1px solid black;">
+				  <th>Fitbit</th>
+				  <th>Summary</th>
+				</tr>
+				<tr>
+				  <td>Distance tracked by Fitbit</td>
+				  <td id="trackedDistance">{{ Summary[7] }}</td>
+				</tr>
+				<tr>
+				  <td>Resting Heartrate(bpm)</td>
+				  <td id="restingHeartrate">{{ Summary[3] }}</td>
+				</tr>
+				<tr>
+					<td>Active Score</td>
+					<td id="activescore">{{ Summary[1] }}</td>
+				</tr>
+				<tr>
+					<td>Activities Distance</td>
+					<td id="activityDistance">{{ Summary[8] }}</td>
+				</tr>
+			</table> 
 			<div class="pieChartDiv">
 				<canvas id="ActivityChart" width='300' height='100'></canvas>
 			</div>
@@ -770,8 +791,9 @@
 					colorsFloors = []
 					colorsElevation = []
 					colorsCalories = []
+					totalActivityminutes=0
 					var i;
-					//go through our weekly array
+					//go through our array which holds the data  for the current timeframe
 					for (i = 0; i < WeeklyDaily.length; i++) {
 						Calories.push(WeeklyDaily[i][0]);
 						Steps.push(WeeklyDaily[i][1]);
@@ -939,6 +961,11 @@
 
 
 </body>
-
+<style>
+table, th, td {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+</style>
 </html>
 {% endblock %}
