@@ -19,6 +19,10 @@ import boto3
 import pandas as pd
 
 
+
+#this function connects to the s3 bucket and gets the
+#fitbit summary csv file. returns an array containing the summary values
+
 def retrieveFitbitSummary(date):
     file = open("aws.txt")
     text = file.readlines()
@@ -26,7 +30,7 @@ def retrieveFitbitSummary(date):
     reg_name=""
     access_key=""
     secret_key=""
-
+    #read the aws.txt file
     for line in text:
         line = line.rstrip("\n")
         linetokens = list(line.split(","))
@@ -35,24 +39,27 @@ def retrieveFitbitSummary(date):
         access_key=str(linetokens[2])
         secret_key=str(linetokens[3])
 
-
+    #create the s3 object
     s3 = boto3.resource(
         service_name=sname,
         region_name=reg_name,
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key
     )
+    #check if the file exists in the s3 bucket
+    #if it doesnt, then the server returns an empty array
     try:
         queryString = 'Date_'+date+'_User_id_218817_fitbitdata.csv'
         obj = s3.Bucket('mobilebucket').Object(queryString).get()
     except:
 
-        Summary = [[0], [0], [0], [0], [0], [0], [0],[0],[0]]
+        Summary = [[0], [0], [0], [0], [0], [0], [0],[0],[0],[0]]
         return Summary
 
     obj = s3.Bucket('mobilebucket').Object(queryString).get()
     foo = pd.read_csv(obj['Body'])
-    idd, activeScore, efficiency, restingHeartRate, OutOfRange, caloriesOut = 0, 0, 0, 0, 0, 0
+    idd, activeScore, efficiency, restingHeartRate, OutOfRange, caloriesOut,SleepData,trackerDistance = 0, 0, 0, 0, 0, 0,0,0
+    efficiency,activityDistance,wakeMinutes,remMinutes,wakeMinutes,deepMinutes=0,0,0,0,0,0
     for index, row in foo.iterrows():
 
         idd = row['ID']
@@ -63,11 +70,14 @@ def retrieveFitbitSummary(date):
         caloriesOut = row['caloriesOut']
         SleepData = row['totalMinutesAsleep']
         trackerDistance= row['trackerdistance']
-        efficiency=row['efficiency']
         activityDistance=row['loggedActivitiesdistance']
+        wakeMinutes=row['wakeMinutes']
+        remMinutes=row['remMinutes']
+        lightMinutes=row['lightMinutes']
+        deepMinutes=row['deepMinutes']
 
     Summary = [idd, activeScore, efficiency,
-               restingHeartRate, OutOfRange, caloriesOut, SleepData, trackerDistance, activityDistance]
+               restingHeartRate, OutOfRange, caloriesOut, SleepData, trackerDistance, activityDistance,wakeMinutes,remMinutes,lightMinutes,deepMinutes]
     return Summary
 
 
