@@ -8,194 +8,308 @@
 	<script src="{{ url_for('static', filename='js/jquery.easypiechart.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/Chart.min.js') }}"></script>
 	<script src="https://cdn.jsdelivr.net/gh/emn178/chartjs-plugin-labels/src/chartjs-plugin-labels.js"></script>
-
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body onload="GetDateTime();">
-	
-	<div class="container">
 
-		<div class="leftHalf">
-			<br><br><br><br><br><br><br><br><br><br>
+	<div class="container" style="padding-top: 20px;">
 
 
-			<div class="barChartDiv">
-				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px" id="StepHelp"></i>
-				<canvas id="StepChart1" width='500' height='300'></canvas>
-			</div>
+		<label for="start">Start date:</label>
+		<input type="date" id="start">
+		<label for="end">End date:</label>
+		<input type="date" id="end">
+		<button id="refresh" onclick="GetData()">Get Info</button>
 
-
-			<div class="lineChartDiv">
-				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px;"
-					id="HeartHelp"></i>
-				<canvas id="HeartChart2" width='500' height='300'></canvas>
-
-			</div>
-
-
-			<div class="lineChartDiv">
-				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px"
-					id="CaloriesHelp"></i>
-				<canvas id="CaloriesChart" width='500' height='300'></canvas>
-			</div>
-			<div class="lineChartDiv">
-				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px"
-					id="DistanceHelp"></i>
-				<canvas id="DistanceChart" width='500' height='300'></canvas>
-			</div>
-			<div class="lineChartDiv">
-				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:520px"
-					id="FloorsHelp"></i>
-				<canvas id="FloorsChart" width='500' height='300'></canvas>
-			</div>
-			<div class="lineChartDiv">
-				<canvas id="ElevationChart" width='500' height='300'></canvas>
-			</div>
-
+		<div class="btn-group" style="width:100%;padding-top: 25px;">
+			<button style="width:33%" onclick="toggleGraphs(1)">Summary</button>
+			<button style="width:33%" onclick="toggleGraphs(2)">Activity</button>
+			<button style="width:33%" onclick="toggleGraphs(3)">Sleep</button>
 		</div>
 
 
-		<div class="rightHalf">
-			<br><br>
-			<label for="start">Start date:</label>
 
-			<input type="date" id="start">
-			<label for="end">End date:</label>
-
-			<input type="date" id="end">
-			<button id="refresh" onclick="GetData()">Get Info</button>
-			<div
-			style="position:absolute;left:110px;width:100% right:10px; top:80px;border: 1px solid green;border-radius: 25px">
-			<h1 class="heading">Health Score:</h1><br>
-
-			</div>
-			<br><br><br><br><br><br><br><br><br><br>
-			<table id="table" style="width:70%;border: 1px solid black;position:relative;left:100px;visibility:visible">
-				<tr style="border: 1px solid black;">
-				  <th>Fitbit</th>
-				  <th>Summary</th>
-				</tr>
-				<tr>
-				  <td>Distance tracked by Fitbit</td>
-				  <td id="trackedDistance">{{ Summary[7] }} miles
-
-			
-				  </td>
-				</tr>
-				<tr>
-				  <td>Resting Heartrate</td>
-				  <td id="restingHeartrate">{{ Summary[3] }} beats per minute
-					
-				  </td>
-				  
-				</tr>
-				<tr>
-					<td>Active Score</td>
-					<td id="activescore">{{ Summary[1] }}
-						
-					</td>
-					
-				</tr>
-				<tr>
-					<td>Activities Distance</td>
-					<td id="activityDistance">{{ Summary[8] }} miles
-						
-					</td>
-					
-				</tr>
-				<tr>
-					<td>Time Asleep</td>
-					<td id="minutesAsleep">{{ Summary[6] }} minutes
-						
-					</td>
-					
-				</tr>
-				<tr>
-					<td>Calories Out</td>
-					<td id="caloriesOut">{{ Summary[5] }} calories
-					
-					</td>
-					
-				</tr>
-				<tr>
-					<td>Out Of Range</td>
-					<td id="outOfRange">{{ Summary[4] }}
-					
-					</td>
-					
-				</tr>
-				<tr>
-					<td>TrackerDistance</td>
-					<td id="Tracker Distance">{{ Summary[7] }} miles
-
-					</td>
-					
-				</tr>
-				<tr>
-					<td>Minutes Awake</td>
-					<td id="MinutesAwake">{{ Summary[9] }} minutes
-
-					</td>
-					
-				</tr>
-				<tr>
-					<td>Minutes in Rem Sleep</td>
-					<td id="MinutesRem">{{ Summary[10] }} minutes
-
-					</td>
-					
-				</tr>
-				<tr>
-					<td>Minutes of Light sleep</td>
-					<td id="MinutesLight">{{ Summary[11] }} minutes
-
-					</td>
-					
-				</tr>
-				<tr>
-					<td>Minutes of deep sleep</td>
-					<td id="MinutesDeep">{{ Summary[12] }} minutes
-
-					</td>
-					
-				</tr>
-
-			</table> 
-			<br><br><br>
-			<div class="pieChartDiv">
-				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:400px" id="ActivityHelp"></i>
-				<canvas id="ActivityChart" width='300' height='100'></canvas>
-			</div>
-			<br>
-			<div class="pieChartDiv">
-				<i class="fa fa-question-circle" style="font-size:24px;position:absolute;left:400px" id="SleepTimeHelp"></i>
-				<canvas id="SleepTimeChart" width='300' height='100'></canvas>
+		<div id="SummaryTab">
+			<div id="top">
+				<br><br><br>
+				<canvas id="scorechart" width="600" height="400"></canvas>
+				<p class="percent"style="position: absolute;left: 300px;transform: translate(-50%, -300%);font-size: 30px;">
+					Health Score is {{ Score }} 
+				</p>
 				
 			</div>
-			<br>
-			<div class="pieChartDiv">
-				<i class="fa fa-question-circle" style="font-size:24px;position:relative;top:30px;left:460px" id="SleepBreakdownHelp"></i>
-				<canvas id="SleepChart" width='300' height='100'></canvas>
+			
+			<div id="right">
+				<table id="table" style="width:30%;border: 1px solid black;position:relative;left:100px;visibility:visible;top:100px">
+					<tr style="border: 1px solid black;">
+					  <th>Fitbit</th>
+					  <th>Summary</th>
+					</tr>
+					<tr>
+					  <td>Distance tracked by Fitbit</td>
+					  <td id="trackedDistance">{{ Summary[7] }} miles
+	
+				
+					  </td>
+					</tr>
+					<tr>
+					  <td>Resting Heartrate</td>
+					  <td id="restingHeartrate">{{ Summary[3] }} beats per minute
+						
+					  </td>
+					  
+					</tr>
+					<tr>
+						<td>Active Score</td>
+						<td id="activescore">87
+							
+						</td>
+						
+					</tr>
+					<tr>
+						<td>Activities Distance</td>
+						<td id="activityDistance">{{ Summary[8] }} miles
+							
+						</td>
+						
+					</tr>
+					<tr>
+						<td>Time Asleep</td>
+						<td id="minutesAsleep">{{ Summary[6] }} minutes
+							
+						</td>
+						
+					</tr>
+					<tr>
+						<td>Calories Out</td>
+						<td id="caloriesOut">{{ Summary[5] }} calories
+						
+						</td>
+						
+					</tr>
+					<tr>
+						<td>Out Of Range</td>
+						<td id="outOfRange">{{ Summary[4] }}
+						
+						</td>
+						
+					</tr>
+					<tr>
+						<td>TrackerDistance</td>
+						<td id="Tracker Distance">{{ Summary[7] }} miles
+	
+						</td>
+						
+					</tr>
+					<tr>
+						<td>Minutes Awake</td>
+						<td id="MinutesAwake">{{ Summary[9] }} minutes
+	
+						</td>
+						
+					</tr>
+					<tr>
+						<td>Minutes in Rem Sleep</td>
+						<td id="MinutesRem">{{ Summary[10] }} minutes
+	
+						</td>
+						
+					</tr>
+					<tr>
+						<td>Minutes of Light sleep</td>
+						<td id="MinutesLight">{{ Summary[11] }} minutes
+	
+						</td>
+						
+					</tr>
+					<tr>
+						<td>Minutes of deep sleep</td>
+						<td id="MinutesDeep">{{ Summary[12] }} minutes
+	
+						</td>
+						
+					</tr>
+	
+				</table> 
+			</div>
+		</div>
+
+
+		<div id="ActivityTab">
+
+
+			<div id="wrapper" class="lineChartDiv" style="display:flex">
+				<div id="first">
+					<i class="fa fa-question-circle help" id="StepHelp"></i>
+					<canvas id="StepChart1" width='500' height='300'></canvas>
+					
+
+				</div>
+				<div id="second">
+					<i class="fa fa-question-circle help" id="HeartHelp"></i>
+					<canvas id="HeartChart2" width='500' height='300'></canvas>
+
+				</div>
+				<div id="third">
+					<i class="fa fa-question-circle help" id="CaloriesHelp"></i>
+					<canvas id="CaloriesChart" width='500' height='300'></canvas>
+
+				</div>
+
 			</div>
 
+			<div id="wrapper" class="lineChartDiv" style="display:flex">
+				<div id="first">
+					<i class="fa fa-question-circle help" id="DistanceHelp"></i>
+					<canvas id="DistanceChart" width='500' height='300'></canvas>
+					
+
+				</div>
+				<div id="second">
+					<i class="fa fa-question-circle help" id="FloorsHelp"></i>
+					<canvas id="FloorsChart" width='500' height='300'></canvas>
+
+				</div>
+			</div>
 
 
 		</div>
 
 
+		<div id="SleepTab">
+			<div class="pieChartDiv">
+				<canvas id="SleepTimeChart" width='500' height='300'></canvas>
+			</div>
+			<br>
+			<div class="pieChartDiv">
+				<canvas id="SleepChart" width='500' height='100'></canvas>
+			</div>
+		</div>
 
 
 
-
-
-
+		<!--<div class="grid-container">
+			<div class="grid-item">
+				<div
+				style="position:relative;width:100% right:10px; top:80px;border: 1px solid red;border-radius: 25px">
+				<h3 class="heading" id="HealthScore">Health Score:</h3>
+				</div>
+			</div>
+			<div class="grid-item">
+				<div class="barChartDiv">
+					<i class="fa fa-question-circle help" id="StepHelp"></i>
+					<canvas id="StepChart1" width='500' height='300'></canvas>
+				</div>
+			</div>
+			<div class="grid-item">
+				<div class="lineChartDiv">
+				<i class="fa fa-question-circle help" id="HeartHelp"></i>
+				<canvas id="HeartChart2" width='500' height='300'></canvas>
+				</div>
+			</div>
+			<div class="grid-item">
+				<div class="lineChartDiv">
+					<i class="fa fa-question-circle help" id="CaloriesHelp"></i>
+					<canvas id="CaloriesChart" width='500' height='300'></canvas>
+				</div>
+			</div>
+			<div class="grid-item">
+				<div class="lineChartDiv">
+					<i class="fa fa-question-circle help" id="DistanceHelp"></i>
+					<canvas id="DistanceChart" width='500' height='300'></canvas>
+				</div>
+			</div>
+			<div class="grid-item">
+				<div class="lineChartDiv">
+					<i class="fa fa-question-circle help" id="FloorsHelp"></i>
+					<canvas id="FloorsChart" width='500' height='300'></canvas>
+				</div>
+			</div>
+			<!--<div class="grid-item">
+				<div class="lineChartDiv">
+					<canvas id="ElevationChart" width='500' height='300'></canvas>
+				</div>
+			</div>
+			<div class="grid-item">
+				<div class="pieChartDiv">
+					<canvas id="ActivityChart" width='300' height='100'></canvas>
+				</div>
+			</div>-->
+			<!--<div class="grid-item">
+				<div class="pieChartDiv">
+					<canvas id="SleepTimeChart" width='500' height='300'></canvas>
+				</div>
+				<br>
+				<div class="pieChartDiv">
+					<canvas id="SleepChart" width='500' height='100'></canvas>
+				</div>
+			</div>
+		</div>-->
 	</div>
 
+
+
 	<script>
+		// Define some globals
+		var refresh = true; // Control auto-refresh data
+	</script>
+
+	<script>
+		//predefining the half doughnut chart for the score
+		var options1 = {
+	  	type: 'doughnut',
+		  data: {
+    			labels: ["Red", "Orange", "Lighter Orange", "Yellow","Green"],
+   				datasets: [
+	   					{
+        	        	label: 'Classification',
+            	    	data: [5, 4, 3, 2 ,1],
+               	 		backgroundColor: [
+               	     		'rgba(231, 76, 60, 1)',
+               	     		'rgba(255, 164, 46, 1)',
+							'rgba(255, 214, 46, 1)',
+							'rgba(255, 255, 23, 1)',
+               	     		'rgba(46, 204, 113, 1)'
+               	 			],
+              	  		borderColor: [
+               	    		 'rgba(255, 255, 255 ,1)',
+               	     		 'rgba(255, 255, 255 ,1)',
+							 'rgba(255, 214, 46, 1)',
+							 'rgba(255, 255, 23, 1)',
+               	     		 'rgba(255, 255, 255 ,1)'
+               	 			],
+               	 		borderWidth: 5
+            			}
+						]
+  		},
+  		options: {
+			cutoutPercentage: 95,
+   		rotation: 1 * Math.PI,
+        	    circumference: 1 * Math.PI,
+            	legend: {
+               	 display: false
+            	},
+            	tooltip: {
+                	enabled: false
+            	},
+				plugins: {
+					labels: {
+						render: 'value',
+						fontStyle: 'bold',
+						shadowBlur: '0'
+					}
+
+				},
+				responsive:false
+  		}
+	}
+	</script>
 
 
+
+	<script>
 		//event listeners for the help icons
 		StepMessage="It is recommended to get atleast 2000 steps every day.";
 		HeartMessage="Resting Heart Rate\nGood: 60-100 bpm\n Could Improve: Less than 60 bpm or greater than 100 bpm";
@@ -203,92 +317,71 @@
 		DistanceMessage="This chart displays the distance traveled \n within the given timeframe."
 		FloorsMessage="This chart displays the total floors gone up\n within the given timeframe."
 
-		//create html elements so we can attach them to the help icons
-		HeartHTML="<img class='heartrange' src='/static/images/heart_rate_ranges.png 'style='width:540px;height:540px;'>";
-		HeartClass=".heartrange"
+		$("#StepHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#StepHelp',StepMessage)); },
+			hideTooltip);
 
-		ActivityHTML="<img class='activity' src='/static/images/activityminutes.png 'style='width:468px;height:130px;'>";
-		ActivityClass=".activity"
+		$("#HeartHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#HeartHelp',HeartMessage)); },
+			hideTooltip);
+		$("#CaloriesHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#CaloriesHelp',CaloriesMessage)); },
+			hideTooltip);
+		$("#DistanceHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#DistanceHelp',DistanceMessage)); },
+			hideTooltip);
+		$("#FloorsHelp").hover(function () { tooltipTimeout = setTimeout(showTooltip('#FloorsHelp',FloorsMessage)); },
+			hideTooltip);
 
-		SleepTimeHTML="<img class='sleeptime' src='/static/images/sleepminutes.png 'style='width:343px;height:468px;'>";
-		SleepTimeClass=".sleeptime"
 
-		SleepBreakdownHTML="<img class='sleepbreakdown' src='/static/images/sleepbreakdown.png 'style='width:386px;height:473spx;'>";
-		SleepBreakdownClass=".sleepbreakdown"
-
-
-		//jquery event listeners that are fired once a user hovers over a help element
-		$("#HeartHelp").hover(function () { tooltipTimeout = setTimeout(showHearttip('#HeartHelp',HeartHTML)); },
-			hideHearttip);
-		$("#ActivityHelp").hover(function () { tooltipTimeout = setTimeout(showtip('#ActivityHelp',ActivityHTML)); },
-			hideActivitytip);
-		$("#SleepTimeHelp").hover(function () { tooltipTimeout = setTimeout(showtip('#SleepTimeHelp',SleepTimeHTML)); },
-			hideSleepTimetip);
-
-		$("#SleepBreakdownHelp").hover(function () { tooltipTimeout = setTimeout(showtip('#SleepBreakdownHelp',SleepBreakdownHTML)); },
-			hideSleepBreakdowntip);
-		
-
-		//function that is used to attach an image to a help icon
-		//using the id of the help icon, and an html element containing the image
-		//separate function because we need to hide the table and graphs on
-		//the right side(pie charts,etc), otherwise the image clips through it
-		function showHearttip(id,HTML) {
-			var htmlelement=HTML
-			var tip = $(htmlelement);
-			$("table").css("visibility", "hidden");
-			$(".pieChartDiv").css("visibility", "hidden");
-			tip.appendTo($(id));
-
-		}
-		//function that shows/displays the help image by appending the image to the help icon
-		function showtip(id,HTML) {
-			var htmlelement=HTML
+		function showTooltip(id,message) {
+			console.log(message);
+			var htmlelement = "<header h6 id='helpinfo' class='tooltip' style=' border: 1px solid red'>";
+			htmlelement = htmlelement + message;
+			htmlelement = htmlelement + "</header>";
 			var tip = $(htmlelement);
 			tip.appendTo($(id));
-			var maxScrollLeft = $(document).width() - $(window).width();
-			$('html, body').scrollLeft(maxScrollLeft);
 		}
-		//these hide functions basically remove the image from the tooltip after the user
-		//stops hovering their mouse over the help icon
-		function hideHearttip() {
+
+		function hideTooltip() {
 			clearTimeout(tooltipTimeout);
-			$(".heartrange").fadeOut().remove();
-			$("table").css("visibility", "visible");
-			$(".pieChartDiv").css("visibility", "visible");
+			$("#helpinfo").fadeOut().remove();
 		}
-		function hideActivitytip() {
-			clearTimeout(tooltipTimeout);
-			$(".activity").fadeOut().remove();
-			$("table").css("visibility", "visible");
-			$(".pieChartDiv").css("visibility", "visible");
-		}
-		function hideSleepTimetip() {
-			clearTimeout(tooltipTimeout);
-			$(".sleeptime").fadeOut().remove();
-			$("table").css("visibility", "visible");
-			$(".pieChartDiv").css("visibility", "visible");
-		}
-		function hideSleepBreakdowntip() {
-			clearTimeout(tooltipTimeout);
-			$(".sleepbreakdown").fadeOut().remove();
-			$("table").css("visibility", "visible");
-			$(".pieChartDiv").css("visibility", "visible");
-		}
-
-
-
-
-
-
-
-
-
 	</script>
+
+
+	<script>
+		// Toggle the appropriate graphs visible
+		function toggleGraphs(section)
+		{
+			allInvisible(); // Turn all graphs off
+
+			switch(section)
+			{
+				case 1: // Summary
+					document.getElementById("SummaryTab").style.display = "block";
+					break;
+				case 2: // Activity
+					document.getElementById("ActivityTab").style.display = "block";
+					break;
+				case 3: // Sleep
+					document.getElementById("SleepTab").style.display = "block";
+					break;
+			}
+		}
+
+
+		// Toggle all graphs off
+		function allInvisible()
+		{
+			document.getElementById("SummaryTab").style.display = "none";
+			document.getElementById("ActivityTab").style.display = "none";
+			document.getElementById("SleepTab").style.display = "none";
+		}
+	</script>
+
+
+
 	<script>
 		//this function finds the current day to display as a default value for the calender
 		function GetDateTime() {
-
+			allInvisible(); // Turn all graphs off
 			var today = new Date();
 			var dd = String(today.getDate()).padStart(2, '0');
 			var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -296,25 +389,29 @@
 
 			today = yyyy + '-' + mm + '-' + dd;
 			document.getElementById('start').value = today;
+			document.getElementById('HealthScore').innerText = "Health Score: " + {{ Score }};
 
 		}
 	</script>
 
-	<script>
 
+<script>
+	//define the score chart
+	var ctx1 = document.getElementById('scorechart').getContext('2d');
+	new Chart(ctx1, options1);
+</script>
+
+	<script>
 		let labelsactivity = ['Sedentary', 'Lightly Active', "Very Active", "Fairly Active"];
 		let activitychart = document.getElementById("ActivityChart").getContext('2d');
-		let Sedentary={{ todayData[5] }};
-		let LightlyActive={{ todayData[6] }};
-		let VeryActive={{ todayData[7] }};
-		let FairlyActive={{ todayData[8] }};
+
 		let activitychart1 = new Chart(activitychart, {
-			type: 'pie',
+			type: 'doughnut',
 
 			data: {
 				datasets: [{
-					data: [Sedentary,LightlyActive,VeryActive,FairlyActive],
-		backgroundColor: ["rgba(0,0,255,0.5)", "rgba(0,255,0,0.5)", "rgba(255,0,0,0.5)","rgba(255,255,0,0.5)"]
+					data: [{{ todayData[5] }}, {{ todayData[6] }},{{ todayData[7] }}, { { todayData[8] } } ],
+		backgroundColor: ["rgba(0,0,255,0.5)", "rgba(0,255,0,0.5)", "rgba(255,0,0,0.5)"]
 				}],
 		labels: ['Sedentary', 'LightlyActive', 'VeryActive', 'Fairly Active']
 			},
@@ -328,7 +425,7 @@
 				mode: 'nearest',
 					intersect: true
 			},
-			//centertext: "0"
+			centertext: "0"
 
 		}
 
@@ -353,26 +450,15 @@
 					ctx.fillText(text, textX, textY);
 					ctx.save();
 
-					
-
 
 				}
-				if (chart.config.options.chartArea && chart.config.options.chartArea.backgroundColor) {
-                    var ctx = chart.chart.ctx;
-                    var chartArea = chart.chartArea;
-
-                    ctx.save();
-                    ctx.fillStyle = chart.config.options.chartArea.backgroundColor;
-                    ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
-                    ctx.restore();
-                }
 			}
 		});
-
 	</script>
 
-	<script>
 
+
+	<script>
 		let sleepchart = document.getElementById("SleepChart").getContext('2d');
 		let Awake = {{ Sleep[0] }};
 		let Light = {{ Sleep[1] }};
@@ -380,12 +466,12 @@
 		let Rem = {{ Sleep[3] }};
 		console.log(Awake);
 		let sleepchart1 = new Chart(sleepchart, {
-			type: 'pie',
+			type: 'doughnut',
 
 			data: {
 				datasets: [{
 					data: [Awake, Rem, Light, Deep],
-					backgroundColor: ["#E679BA7B", "#E6D66C65", "#E65DA3C3", "#E67A5DAC"]
+					backgroundColor: ["rgba(0,0,255,0.5)", "rgba(0,255,0,0.5)", "rgba(255,255,0,0.5)", "rgba(255,0,0,0.5)"]
 				}],
 				labels: ['Hours Awake', 'Hours of REM Sleep', 'Hours of Light Sleep', 'Hours of Deep Sleep']
 			},
@@ -407,27 +493,26 @@
 					}
 
 				},
-				//centertext: {{ Summary[2] }}
+				centertext: {{ Summary[2] }}
 
 			}
 
 		});
-
 	</script>
 
-	<script>
 
+
+	<script>
 		let sleeptimechart = document.getElementById("SleepTimeChart").getContext('2d');
-		let hoursSlept={{ Summary[6] }};
-		hoursSlept=parseFloat(hoursSlept/60).toFixed(2);
+
 
 
 		let sleeptimechart1 = new Chart(sleeptimechart, {
-			type: 'pie',
-			
+			type: 'doughnut',
+
 			data: {
 				datasets: [{
-					data: [hoursSlept, 9-hoursSlept],
+					data: [0, 9],
 					backgroundColor: ["rgba(0,255,0,0.5)", "rgba(255,0,0,0.5)"]
 				}],
 				labels: ['Hours Slept', 'Hours Awake']
@@ -450,14 +535,14 @@
 					}
 
 				},
-				//centertext: "0",
-				
+				centertext: "0"
 
 			}
 
 		});
-
 	</script>
+
+
 
 
 	<script>
@@ -467,18 +552,25 @@
 		"{{ item }}",
 			{% endfor %}
 				    ];
-		console.log(data1)
 
 		let myChart1 = document.getElementById("StepChart1").getContext('2d');
 
 		let chart1 = new Chart(myChart1, {
-			type: 'bar',
+			type: 'line',
 
 			data: {
 				labels: labels1,
 				datasets: [{
 					data: data1,
-					backgroundColor: '#f06262',
+					lineTension: 0.1,
+					backgroundColor: 'rgba(63, 191, 191,0.5)',
+					borderColor: "rgba(75,192,192,1)",
+					pointBorderColor: "rgba(75,192,192,1)",
+					pointBackgroundColor: "#fff",
+					pointBorderWidth: 1,
+					pointHoverRadius: 5,
+					pointHoverBackgroundColor: "rgba(75,192,192,1)",
+					fill: false,
 				}]
 			},
 
@@ -512,10 +604,7 @@
 					mode: 'nearest',
 					intersect: true
 				},
-				plugins: {
-  							labels: false
-						}
-				
+				responsive:false
 			}
 
 		});
@@ -551,15 +640,14 @@
 				labels: labels2,
 				datasets: [{
 					lineTension: 0.1,
-					borderColor:'#80FF85',
-					backgroundColor: '#f06262',
-					//borderColor: "rgba(255,192,192,1)",
-					pointBorderColor: "rgba(75,192,192,1)",
-					pointBackgroundColor: "rgba(0,155,0,1)",
+					backgroundColor: colors2,
+					borderColor: colors2,
+					pointBorderColor: colors2,
+					pointBackgroundColor: colors2,
 					pointBorderWidth: 1,
 					pointHoverRadius: 5,
-					pointHoverBackgroundColor: "rgba(75,192,192,1)",
-					fill:false,
+					pointHoverBackgroundColor: colors2,
+					fill: false,
 					data: data2,
 
 				}]
@@ -595,6 +683,7 @@
 					mode: 'nearest',
 					intersect: true
 				},
+				responsive:false
 			}
 
 		});
@@ -611,15 +700,22 @@
 		let myChart3 = document.getElementById("CaloriesChart").getContext('2d');
 
 		let chart3 = new Chart(myChart3, {
-			type: 'bar',
+			type: 'line',
 
 			data: {
 				labels: labels3,
 				datasets: [{
 					lineTension: 0.1,
-					backgroundColor: '#f06262',
+					backgroundColor: 'rgba(63, 191, 191,0.5)',
+					borderColor: "rgba(75,192,192,1)",
+					pointBorderColor: "rgba(75,192,192,1)",
+					pointBackgroundColor: "#fff",
+					pointBorderWidth: 1,
+					pointHoverRadius: 5,
+					pointHoverBackgroundColor: "rgba(75,192,192,1)",
 					fill: false,
 					data: data3,
+					backgroundColor: colors2
 				}]
 			},
 
@@ -649,9 +745,7 @@
 				legend: {
 					display: false
 				},
-				plugins: {
-  							labels: false
-						}
+				responsive:false
 			}
 
 		});
@@ -666,20 +760,27 @@
 		let myChart4 = document.getElementById("DistanceChart").getContext('2d');
 
 		let chart4 = new Chart(myChart4, {
-			type: 'bar',
+			type: 'line',
 
 			data: {
 				labels: labels4,
 				datasets: [{
-					backgroundColor: '#f06262',
+					lineTension: 0.1,
+					borderColor: "rgba(75,192,192,1)",
+					pointBorderColor: "rgba(75,192,192,1)",
+					pointBackgroundColor: "#fff",
+					pointBorderWidth: 1,
+					pointHoverRadius: 5,
+					pointHoverBackgroundColor: "rgba(75,192,192,1)",
 					fill: false,
 					data: data4,
+					backgroundColor: colors4
 				}]
 			},
 
 			options: {
 				title: {
-					text: "Miles Walked",
+					text: "Distance Covered",
 					display: true
 				},
 				scales: {
@@ -689,7 +790,7 @@
 						},
 						scaleLabel: {
 							display: true,
-							labelString: 'Miles'
+							labelString: 'Distance'
 						}
 					}],
 					xAxes: [{
@@ -703,9 +804,7 @@
 				legend: {
 					display: false
 				},
-				plugins: {
- 					 labels: false
-				}		
+				responsive:false
 			}
 
 		});
@@ -720,15 +819,22 @@
 		let myChart5 = document.getElementById("FloorsChart").getContext('2d');
 
 		let chart5 = new Chart(myChart5, {
-			type: 'bar',
+			type: 'line',
 
 			data: {
 				labels: labels4,
 				datasets: [{
-					backgroundColor: '#f06262',
+					lineTension: 0.1,
+					backgroundColor: 'rgba(63, 191, 191,0.5)',
+					borderColor: "rgba(75,192,192,1)",
+					pointBorderColor: "rgba(75,192,192,1)",
+					pointBackgroundColor: "#fff",
+					pointBorderWidth: 1,
+					pointHoverRadius: 5,
+					pointHoverBackgroundColor: "rgba(75,192,192,1)",
 					fill: false,
 					data: data5,
-
+					backgroundColor: colors4
 				}]
 			},
 
@@ -758,29 +864,36 @@
 				legend: {
 					display: false
 				},
-				plugins: {
- 					 labels: false
-				}	
+				responsive:false
 			}
 
 		});
 	</script>
 
+
+
 	<script>
-		var dynamic=setInterval(function () {
-			$.ajax({
+		setInterval(function ()
+		{
+			if(refresh) // Check if auto-refresh is on
+			{
+				$.ajax({
 				url: "/web/data",
 				type: 'GET',
 				success: function (res) {
 					//parse our response
-					var Calories = res.calories;
-					var Steps = res.steps;
-					var CaloriesBMR = res.caloriesBMR;
-					var Distance = res.distance;
-					var Floors = res.floors;
+					/*console.log("Today: " + res.today);
+					console.log("Summary: " + res.summary);
+					console.log("Sleep: " + res.sleep);*/
+
+					var Calories = res.today[0];
+					var Steps = res.today[1];
+					var Distance = res.today[2];
+					var Floors = res.today[3];
+					var Heart = res.today[9];
 					//update our charts dynamically by changing the data	
 					chart1.data.datasets[0].data = Steps;
-					chart2.data.datasets[0].data = CaloriesBMR;
+					chart2.data.datasets[0].data = Heart;
 					chart3.data.datasets[0].data = Calories;
 					chart4.data.datasets[0].data = Distance;
 					chart5.data.datasets[0].data = Floors;
@@ -791,12 +904,16 @@
 					chart5.update();
 				}
 			});
+			}
 		}, 40000);
-		clearInterval(dynamic);
+
 
 		function Refresh() {
 			var StartDate = $('#start').val().split('/');
 			var EndDate = $('#end').val().split('/');
+
+			// Turn auto-refresh off
+			refresh = false;
 
 
 			$.ajax({
@@ -884,13 +1001,15 @@
 					//$("#refresh").text("Weekly Summary");
 				}
 			});
-
-
 		}
 
 		function GetData() {
 			var StartDate = $('#start').val().split('/');
 			var EndDate = $('#end').val().split('/');
+
+			// Turn auto-refresh off
+			refresh = false;
+
 			$.ajax({
 				url: "/web/datedata",
 				type: "POST",
@@ -918,9 +1037,8 @@
 					colorsFloors = []
 					colorsElevation = []
 					colorsCalories = []
-					totalActivityminutes=0
 					var i;
-					//go through our array which holds the data  for the current timeframe
+					//go through our weekly array
 					for (i = 0; i < WeeklyDaily.length; i++) {
 						Calories.push(WeeklyDaily[i][0]);
 						Steps.push(WeeklyDaily[i][1]);
@@ -939,6 +1057,8 @@
 
 						if (parseFloat(WeeklyDaily[i][1]) > 0) {
 							colorsSteps.push('rgba(0, 255, 0, 1)');
+
+
 
 						}
 						else {
@@ -1061,7 +1181,7 @@
 					//update the sleepchart
 					sleepchart1.data.datasets[0].data = Sleep;
 					sleeptimechart1.data.datasets[0].data = SleepHours;
-					activitychart1.data.datasets[0].data = ActivityHours;
+					//activitychart1.data.datasets[0].data = ActivityHours;
 
 					chart1.data.labels = res.Dates;
 					chart2.data.labels = res.Dates;
@@ -1077,7 +1197,7 @@
 					chart5.update();
 					sleepchart1.update();
 					sleeptimechart1.update();
-					activitychart1.update();
+					//activitychart1.update();
 
 				}
 			});
@@ -1088,11 +1208,9 @@
 
 
 </body>
+
 <style>
-table, th, td {
-	border: 1px solid black;
-	border-collapse: collapse;
-}
+
 </style>
 </html>
 {% endblock %}

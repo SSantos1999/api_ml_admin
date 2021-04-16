@@ -2,7 +2,7 @@
 
 from datetime import date, timedelta
 import datetime
-from flask import render_template, flash, redirect, url_for, request, jsonify
+from flask import render_template, flash, redirect, url_for, request, jsonify, make_response
 #from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.urls import url_parse
 from app.web import bp
@@ -17,20 +17,32 @@ from app import mongo
 import os
 import boto3
 import pandas as pd
+from joblib import load
+import numpy as np
+import io
+def retrieveHealthStatus():
+# load the saved model and scaler
+    model = load('xgboost.model')
+    scaler = load('xgboost.scaler')
 
+    num_data_fitbit = 0
+    num_data_hourly = 0
+    avg_calories = 0
+    avg_calories_mets = 0
+    avg_steps = 0
+    avg_distance = 0
+    avg_floors = 0
+    avg_elevation = 0
+    avg_heart_rate = 0
+    avg_sleep_score = 0
 
-
-#this function connects to the s3 bucket and gets the
-#fitbit summary csv file. returns an array containing the summary values
-
-def retrieveFitbitSummary(date):
     file = open("aws.txt")
     text = file.readlines()
-    sname=""
+    name=""
     reg_name=""
     access_key=""
     secret_key=""
-    #read the aws.txt file
+
     for line in text:
         line = line.rstrip("\n")
         linetokens = list(line.split(","))
@@ -39,29 +51,138 @@ def retrieveFitbitSummary(date):
         access_key=str(linetokens[2])
         secret_key=str(linetokens[3])
 
-    #create the s3 object
+
     s3 = boto3.resource(
         service_name=sname,
         region_name=reg_name,
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key
     )
-    #check if the file exists in the s3 bucket
-    #if it doesnt, then the server returns an empty array
+
+    bucket = s3.Bucket('mobilebucket')
+
+    userid = 218817
+
+    for obj in bucket.objects.all():
+        key = obj.key
+        body = obj.get()['Body'].read()
+    
+        if(str(str(userid)+'_fitbitdata') in key):
+            summary = pd.read_csv(io.BytesIO(body), encoding='utf8')
+            calories = summary.at[0,'caloriesOut']
+            sleep_score = summary.at[0,'efficiency']
+            # compute running total
+            num_data_fitbit = num_data_fitbit + 1
+            avg_calories = avg_calories + calories
+            avg_sleep_score = avg_sleep_score + sleep_score
+        
+        if(str(str(userid)+'_hourlydata') in key):
+            hourly = pd.read_csv(io.BytesIO(body), encoding='utf8')
+            calories_mets = hourly['caloriesMets'].sum() / (96 * 15)
+            steps = hourly['steps'].sum()
+            distance = hourly['distance'].sum()
+            floors = hourly['floors'].sum()
+            elevation = hourly['elevation'].sum()
+            try: 
+                heart_rate = hourly['heartRate'].sum() / 96
+            except:
+                heart_rate = 0
+        # compute running total
+            num_data_hourly = num_data_hourly + 1
+            avg_calories_mets = avg_calories_mets + calories_mets
+            avg_steps = avg_steps + steps
+            avg_distance = avg_distance + distance
+            avg_floors = avg_floors + floors
+            avg_elevation = avg_elevation + elevation
+            avg_heart_rate = avg_heart_rate + heart_rate
+        
+# compute averages
+   # if num_data_fitbit == 0 or num_data_hourly==0:
+    #    num_data_fitbit=1
+     #   num_data_hourly=1
+
+
+    avg_calories = avg_calories / num_data_fitbit
+    avg_calories_mets = avg_calories_mets / num_data_hourly
+    avg_steps = avg_steps / num_data_hourly
+    avg_distance = avg_distance / num_data_hourly
+    avg_floors = avg_floors / num_data_hourly
+    avg_elevation = avg_elevation / num_data_hourly
+    avg_heart_rate = avg_heart_rate / num_data_hourly
+    avg_sleep_score = avg_sleep_score / num_data_fitbit
+        
+
+    age = 31
+# make the array
+    test = [age, avg_calories, avg_calories_mets, avg_steps, avg_distance, avg_floors, avg_elevation, avg_heart_rate, avg_sleep_score]
+    
+    x = np.array([test])
+
+# compute the classification result
+    result = int(model.predict(scaler.transform(x)))
+
+
+# update or write score to ml_user_score file in s3: first load the file from s3, then edit the file, then upload it back to s3.
+    s3 = boto3.client( # note: boto3.client allows to do low level API calls whereas, boto3.resource allows only high level API calls
+        service_name=sname,
+        region_name=reg_name,
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key
+    )
+    obj = s3.get_object(Bucket = 'mobilebucket', Key = 'ml_user_scores.csv')
+    ml_scores = pd.read_csv(io.BytesIO(obj['Body'].read()), encoding='utf8')
+    if userid in ml_scores.values:
+        d = {'userid':[userid], 'score':[result]}
+        dfn = pd.DataFrame(data=d)
+        ml_scores.update(ml_scores[['userid']].merge(dfn, 'left'))
+    else:
+        ml_scores.loc[len(ml_scores.index)] = [userid, result]
+    ml_scores.to_csv('ml_user_scores.csv', sep=',', encoding='utf-8', index=False)
+
+    s3.upload_file('ml_user_scores.csv','mobilebucket','ml_user_scores.csv')
+
+    return result
+
+def retrieveFitbitSummary(date):
+    file = open("aws.txt")
+    text = file.readlines()
+    sname=""
+    reg_name=""
+    access_key=""
+    secret_key=""
+
+    for line in text:
+        line = line.rstrip("\n")
+        linetokens = list(line.split(","))
+        sname=str(linetokens[0])
+        reg_name=str(linetokens[1])
+        access_key=str(linetokens[2])
+        secret_key=str(linetokens[3])
+
+
+    s3 = boto3.resource(
+        service_name=sname,
+        region_name=reg_name,
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key
+    )
+    
     try:
-        queryString = 'Date_'+date+'_User_id_218817_fitbitdata.csv'
-        obj = s3.Bucket('mobilebucket').Object(queryString).get()
-    except:
+        queryString = 'Date_' + date + '_User_id_' + str(218817) + '_fitbitdata.csv'
+        #the commented out line gets the user data for the user logged in
+        #we're currently using alex's data since he has the most
 
-        Summary = [[0], [0], [0], [0], [0], [0], [0],[0],[0],[0]]
+        #queryString = 'Date_' + date + '_User_id_' + str(session['user'].uid) + '_fitbitdata.csv'
+        s3.Bucket('mobilebucket').Object(queryString).get()
+    except: # Will go here if no data on S3 for current day
+        Summary = [[0], [0], [0], [0], [0], [0]]
         return Summary
-
+    queryString = 'Date_' + date + '_User_id_' + str(218817) + '_fitbitdata.csv'
+    #queryString = 'Date_' + date + '_User_id_' + str(session['user'].uid) + '_fitbitdata.csv'
     obj = s3.Bucket('mobilebucket').Object(queryString).get()
     foo = pd.read_csv(obj['Body'])
-    idd, activeScore, efficiency, restingHeartRate, OutOfRange, caloriesOut,SleepData,trackerDistance = 0, 0, 0, 0, 0, 0,0,0
-    efficiency,activityDistance,wakeMinutes,remMinutes,wakeMinutes,deepMinutes=0,0,0,0,0,0
+    idd, activeScore, efficiency, restingHeartRate, OutOfRange, caloriesOut = 0, 0, 0, 0, 0, 0
     for index, row in foo.iterrows():
-
         idd = row['ID']
         activeScore = row['activeScore']
         efficiency = row['efficiency']
@@ -69,16 +190,12 @@ def retrieveFitbitSummary(date):
         OutofRange = ['(Out of Range)']
         caloriesOut = row['caloriesOut']
         SleepData = row['totalMinutesAsleep']
-        trackerDistance= row['trackerdistance']
-        activityDistance=row['loggedActivitiesdistance']
-        wakeMinutes=row['wakeMinutes']
-        remMinutes=row['remMinutes']
-        lightMinutes=row['lightMinutes']
-        deepMinutes=row['deepMinutes']
 
     Summary = [idd, activeScore, efficiency,
-               restingHeartRate, OutOfRange, caloriesOut, SleepData, trackerDistance, activityDistance,wakeMinutes,remMinutes,lightMinutes,deepMinutes]
+            restingHeartRate, OutOfRange, caloriesOut, SleepData]
     return Summary
+
+    
 
 
 def retrieveHourlyData(date):
@@ -105,14 +222,18 @@ def retrieveHourlyData(date):
         aws_secret_access_key=secret_key
     )
     try:
-        queryString = 'Date_'+date+'_User_id_218817_hourlydata.csv'
+        str(218817)
+        queryString = 'Date_'+date+'_User_id_' + str(218817) + '_hourlydata.csv'
+        #the commented out line gets the user data for the user logged in, 218817 is Alex's id
+        #queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_hourlydata.csv'
         obj = s3.Bucket('mobilebucket').Object(queryString).get()
-    except:
+    except: # Will go here if no data on S3 for current day
         HourlyData = [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]
         return HourlyData
 
        # read hourly data file. each line of data is in 15 minute increments
-    queryString = 'Date_'+date+'_User_id_218817_hourlydata.csv'
+    queryString = 'Date_'+date+'_User_id_' + str(218817) + '_hourlydata.csv'
+    #queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_hourlydata.csv'
 
     obj = s3.Bucket('mobilebucket').Object(queryString).get()
     foo = pd.read_csv(obj['Body'])
@@ -197,12 +318,15 @@ def retrieveSleepData(date):
     Sleep = [0, 0, 0, 0]
     # read sleepdata file.
     try:
-        queryString = 'Date_'+date+'_User_id_218817_sleepdata.csv'
+        queryString = 'Date_'+date+'_User_id_' + str(218817) + '_sleepdata.csv'
+        #the commented out line gets the user data for the user logged in, 218817 is Alex's id
+        #queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_sleepdata.csv'
         obj = s3.Bucket('mobilebucket').Object(queryString).get()
-    except:
+    except: # Will go here if no data on S3 for current day
         Sleep = [[0], [0], [0], [0]]
         return Sleep
-    queryString = 'Date_'+date+'_User_id_218817_sleepdata.csv'
+    queryString = 'Date_'+date+'_User_id_' + str(218817) + '_sleepdata.csv'
+    #queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_sleepdata.csv'
     obj = s3.Bucket('mobilebucket').Object(queryString).get()
     foo = pd.read_csv(obj['Body'])
     for index, row in foo.iterrows():
@@ -288,7 +412,6 @@ def GetWeekData():
 # this request handles the date function
 @bp.route('/datedata', methods=['POST'])
 def GetDateData():
-    user_id = 123
     # convert our data from a form object to a dictionary object
     data = request.form.to_dict(flat=False)
     # get our date data from our dictionary
@@ -328,16 +451,34 @@ def GetDateData():
     return todayData
 
 
-# this request handles any updated data
+# this request handles any updated data for current day
 @bp.route('/data', methods=['GET'])
 def updateData():
     today = date.today()
     todayData = mongo.db.user_stats.find_one(
         {'user_id': session['user'].uid, 'date': today.strftime("%Y-%m-%d")})
     # read our data file to get data
-    user_id = 123
+
+
+    DateString = today.strftime("%Y-%m-%d")
+    #  print(DateString)
+    Summary = retrieveFitbitSummary(DateString)
+    # Sleep data array consisting of [Awake,Light,Deep,Rem] sleep
+    Sleep = retrieveSleepData(DateString)
+    # read hourly data file. each line of data is in 15 minute increments
+    todayData = retrieveHourlyData(DateString)
+
+    # Make response
+    response = {'today':todayData, 'summary':Summary, 'sleep':Sleep}
+    return response
+
+
+    """
+    #user_id = 123
+    user_id = session['user'].uid
     file_String = "HealthData/"+str(user_id)+"_"+str(today)+".txt"
     file = open("123_data.txt")
+    #file = open(file_String)
     text = file.readlines()
     if todayData is None:
         todayTotal = [0, 0, 0, 0]
@@ -353,7 +494,6 @@ def updateData():
                      'minutesFairlyActive': 0,
                      'minutesVeryActive': 0
                      }
-
         counter = 0
         # go through each line in our data file
         for line in text:
@@ -375,13 +515,13 @@ def updateData():
                 todayData['minutesVeryActive'] += int(linetokens[10])
             counter = counter+1
     return todayData
+    """
 
 
 # user login, init version create by Devi. I removed flask_login.
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if 'user' in session:
-        #print('User Found')
         return render_template('/index.html', data=session['user'].name)
     form = LoginForm()
     jsonPayload = None
@@ -396,12 +536,13 @@ def login():
         result = result.json()
         if result['status'] != 'fail':
             user = Session_User(
-                form.username.data, result['auth_token'], result['user']['user_id'])
+                form.username.data, result['auth_token'], int(result['user']['user_id']))
 
             session['user'] = user
             next_page = request.args.get('next')
             if not next_page or url_parse(next_page).netloc != '':
                 next_page = url_for('web.mydashboard')
+
             return redirect(next_page)
         else:
             flash('Invalid username or password')
@@ -474,9 +615,9 @@ def reset_request():
         flash('We did not find that email address in our records. Please check and re-enter it or register for a new account.', '_info_')
     return render_template('/reset_request.html', title='Reset Password', form=form)
 
+
+
 # show today's data on the dashboard
-
-
 @bp.route('/mydashboard', methods=['GET'])
 def mydashboard():
     if 'user' in session:
@@ -486,9 +627,8 @@ def mydashboard():
         # connect to s3 bucket
 
         DateString = today.strftime("%Y-%m-%d")
-        DateString = str(DateString)
         DateString = "2021-03-04"
-        print(DateString)
+        #  print(DateString)
         Summary = retrieveFitbitSummary(DateString)
         # Sleep data array consisting of [Awake,Light,Deep,Rem] sleep
         Sleep = retrieveSleepData(DateString)
@@ -496,13 +636,18 @@ def mydashboard():
         # read hourly data file. each line of data is in 15 minute increments
         todayData = retrieveHourlyData(DateString)
 
-        return render_template('/mydashboard.html', Summary=Summary, todayData=todayData, Sleep=Sleep)
+        # Get the user's ML score
+        #url = 'http://0.0.0.0:5000/score/' + str(session['user'].uid)
+        #result = requests.get(url) # Make call
+        #result = result.json() # Read response
+        Score=retrieveHealthStatus()
+        return render_template('/mydashboard.html', Summary=Summary, todayData=todayData, Sleep=Sleep, Score=Score)
     else:
         return redirect(url_for('web.login'))
 
+
+
 # show profile
-
-
 @bp.route('/myprofile', methods=['GET'])
 def myprofile():
     if 'user' in session:
@@ -618,4 +763,3 @@ def upload_file():
             return redirect(url_for('web.myprofile'))
     else:
         return redirect(url_for('web.index'))
-
