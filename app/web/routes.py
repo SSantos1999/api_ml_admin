@@ -20,6 +20,7 @@ import pandas as pd
 from joblib import load
 import numpy as np
 import io
+from datetime import datetime
 def retrieveHealthStatus():
 # load the saved model and scaler
     model = load('xgboost.model')
@@ -61,7 +62,7 @@ def retrieveHealthStatus():
 
     bucket = s3.Bucket('mobilebucket')
 
-    userid = 218817
+    userid = str(session['user'].uid)
 
     for obj in bucket.objects.all():
         key = obj.key
@@ -143,6 +144,66 @@ def retrieveHealthStatus():
 
     return result
 
+
+#this function gets the classification score that was saved by the model
+#returns -1 if the model has not classified a user before.
+def getPreviousHealthScore(userid):
+    userscores=open('ml_user_scores.csv')
+    text=userscores.readlines()
+    #go through our file
+    for line in text:
+        #remove newline and split the line based on commas
+        line=line.rstrip("\n")
+        tokens=list(line.split(","))
+        user_id=str(tokens[0])
+        user_score=str(tokens[1])
+        #check if we found the correct userid
+        if(user_id==userid):
+            return user_score
+
+    return -1        
+
+
+
+
+#function which saves user score
+#this function saves the user score into a file 
+
+def saveScore(userid,score):
+
+    #check if a user score history exists, otherwise create a new file
+    userfile=0
+    text=0
+    case=-1
+    directorystring=str(userid)+".txt"
+    dirpath=os.getcwd()
+    dirpath=dirpath+"/score_history/"+str(userid)+".txt"
+    timestamp = datetime.now()
+
+    #check if the file exists
+    try:
+        f = open(dirpath)
+        f.close()
+    #if the user file doesnt exist we simply create a new file
+    except FileNotFoundError:
+        with open(dirpath, "w") as file_object:
+            #write the new userid, the score, and the timestamp
+            file_object.write("userid,score,timestamp of score\n")  
+            file_object.write(str(userid)+","+str(score)+","+str(timestamp))     
+    #otherwise if the file exists, just apend the new score to it
+    else:
+        with open(dirpath, "a") as file_object:
+        #append the userid, the score, and the timestamp
+            file_object.write("\n"+str(userid)+","+str(score)+","+str(timestamp))
+
+
+    
+    
+
+    
+
+
+
 def retrieveFitbitSummary(date):
     file = open("aws.txt")
     text = file.readlines()
@@ -168,17 +229,17 @@ def retrieveFitbitSummary(date):
     )
     
     try:
-        queryString = 'Date_' + date + '_User_id_' + str(218817) + '_fitbitdata.csv'
+        #queryString = 'Date_' + date + '_User_id_' + str(218817) + '_fitbitdata.csv'
         #the commented out line gets the user data for the user logged in
         #we're currently using alex's data since he has the most
 
-        #queryString = 'Date_' + date + '_User_id_' + str(session['user'].uid) + '_fitbitdata.csv'
+        queryString = 'Date_' + date + '_User_id_' + str(session['user'].uid) + '_fitbitdata.csv'
         s3.Bucket('mobilebucket').Object(queryString).get()
     except: # Will go here if no data on S3 for current day
         Summary = [[0], [0], [0], [0], [0], [0]]
         return Summary
-    queryString = 'Date_' + date + '_User_id_' + str(218817) + '_fitbitdata.csv'
-    #queryString = 'Date_' + date + '_User_id_' + str(session['user'].uid) + '_fitbitdata.csv'
+    #queryString = 'Date_' + date + '_User_id_' + str(218817) + '_fitbitdata.csv'
+    queryString = 'Date_' + date + '_User_id_' + str(session['user'].uid) + '_fitbitdata.csv'
     obj = s3.Bucket('mobilebucket').Object(queryString).get()
     foo = pd.read_csv(obj['Body'])
     idd, activeScore, efficiency, restingHeartRate, OutOfRange, caloriesOut = 0, 0, 0, 0, 0, 0
@@ -223,17 +284,17 @@ def retrieveHourlyData(date):
     )
     try:
         str(218817)
-        queryString = 'Date_'+date+'_User_id_' + str(218817) + '_hourlydata.csv'
-        #the commented out line gets the user data for the user logged in, 218817 is Alex's id
-        #queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_hourlydata.csv'
+        #queryString = 'Date_'+date+'_User_id_' + str(218817) + '_hourlydata.csv'
+        #the commented out line gets the user data for alex
+        queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_hourlydata.csv'
         obj = s3.Bucket('mobilebucket').Object(queryString).get()
     except: # Will go here if no data on S3 for current day
         HourlyData = [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]
         return HourlyData
 
        # read hourly data file. each line of data is in 15 minute increments
-    queryString = 'Date_'+date+'_User_id_' + str(218817) + '_hourlydata.csv'
-    #queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_hourlydata.csv'
+    #queryString = 'Date_'+date+'_User_id_' + str(218817) + '_hourlydata.csv'
+    queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_hourlydata.csv'
 
     obj = s3.Bucket('mobilebucket').Object(queryString).get()
     foo = pd.read_csv(obj['Body'])
@@ -318,15 +379,15 @@ def retrieveSleepData(date):
     Sleep = [0, 0, 0, 0]
     # read sleepdata file.
     try:
-        queryString = 'Date_'+date+'_User_id_' + str(218817) + '_sleepdata.csv'
-        #the commented out line gets the user data for the user logged in, 218817 is Alex's id
-        #queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_sleepdata.csv'
+        #queryString = 'Date_'+date+'_User_id_' + str(218817) + '_sleepdata.csv'
+        #the commented out line gets the user data for alex's data
+        queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_sleepdata.csv'
         obj = s3.Bucket('mobilebucket').Object(queryString).get()
     except: # Will go here if no data on S3 for current day
         Sleep = [[0], [0], [0], [0]]
         return Sleep
-    queryString = 'Date_'+date+'_User_id_' + str(218817) + '_sleepdata.csv'
-    #queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_sleepdata.csv'
+    #queryString = 'Date_'+date+'_User_id_' + str(218817) + '_sleepdata.csv'
+    queryString = 'Date_'+date+'_User_id_' + str(session['user'].uid) + '_sleepdata.csv'
     obj = s3.Bucket('mobilebucket').Object(queryString).get()
     foo = pd.read_csv(obj['Body'])
     for index, row in foo.iterrows():
@@ -627,7 +688,7 @@ def mydashboard():
         # connect to s3 bucket
 
         DateString = today.strftime("%Y-%m-%d")
-        DateString = "2021-03-04"
+        
         #  print(DateString)
         Summary = retrieveFitbitSummary(DateString)
         # Sleep data array consisting of [Awake,Light,Deep,Rem] sleep
@@ -635,13 +696,15 @@ def mydashboard():
 
         # read hourly data file. each line of data is in 15 minute increments
         todayData = retrieveHourlyData(DateString)
-
-        # Get the user's ML score
-        #url = 'http://0.0.0.0:5000/score/' + str(session['user'].uid)
-        #result = requests.get(url) # Make call
-        #result = result.json() # Read response
-        Score=retrieveHealthStatus()
-        return render_template('/mydashboard.html', Summary=Summary, todayData=todayData, Sleep=Sleep, Score=Score)
+        #get the user's previous health score
+        #previousScore=getPreviousHealthScore("218817")
+        #Get the score from the model/classifiy based on new data
+        #Score=retrieveHealthStatus()
+        #print("previousScore",previousScore)
+        #saveScore(218817,Score)
+        previousScore=0
+        Score=0
+        return render_template('/mydashboard.html', Summary=Summary, todayData=todayData, Sleep=Sleep, previousScore=previousScore), Score=Score
     else:
         return redirect(url_for('web.login'))
 
